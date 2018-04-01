@@ -1,0 +1,16 @@
+The goal of this project is to use machine learning algorithms to train an AI player for the two-person game Pentago.
+
+Stages of the project: 
+
+1. Write Two-Player version of Pentago. (Python 2.7)
+2. Implement "dummy AI" player to play against. 
+          Plays random moves. This is a place-holder player for more sophisticated AI algorithms.
+3. Replace "dummy AI" with AI that uses Przemek's algorithm (BitBucket: https://bitbucket.org/przemekr/pentago)
+    Note: This will require calling Przemek's function (in C++) from mine (Python). 
+          SciPy seems to have tools to help do this, but this could be very tricky.
+4. In TensorFlow, use DQN to train pentago AI to play against Przemek's algorithm. 
+          Start the TensorFlow framework before ironing out everything with calling C++ functions from Python.
+
+One day...
+Play against super-solved Pentago server. 
+If losing often, get permission to train with the data on the server. 
