@@ -7,12 +7,13 @@ class Player:
         self.id = id                #the id also used to mark pieces on the board
      # perform a play action   
     def play(self,  board):
-        #print("player " + self.name + " is playing.")  #stupid nonsense Jarek put in
+        #print("player " + self.name + " is playing.")  #just in case
         return 0
         
         
 class HumanPlayer(Player):
     def play(self,  a_board):
+        #place a piece
         validMove = False;
         while not validMove:
             x, y = [int(x) for x in raw_input("Enter the coordinate to play (x, y): ").split(',')]
@@ -23,78 +24,72 @@ class HumanPlayer(Player):
                 validMove = True;
             else:
                 print("Invalid play. Please choose again!")
-                
-        validMove = False;
-        while not validMove:
-            if a_board.Rotate() == 0:
-                validMove = True;
+
+        #rotate a quadrant
+        Quad = 0
+        while (Quad != 1) and (Quad != 2) and (Quad != 3) and (Quad != 4):
+            Quad = int(input("Which quadrant (1, 2, 3 or 4) to rotate? "))
+            #print ("Invalid quadrant.")
+        
+        direction = 0
+        while direction != 3 and direction != 1:
+            rotation = raw_input("Which direction to rotate (C or CC)?")
+            if rotation == "C":
+                  direction = 3
+            elif rotation == "CC":
+                  direction = 1
+            else:
+                  print("Invalid rotation.")
+                  
+        a_board.Rotate(Quad, direction)
+
 
 class Board:
     def __init__(self):
         self.boardmtx = np.zeros((6,6),dtype=np.int)
-        #self.boardmtx[0,0] = 1
+        #self.boardmtx[0,0] = 1  #for trouble-shooting game, start with a given board
         #self.boardmtx[0,1] = 1
         #self.boardmtx[0,2] = 1
         #self.boardmtx[0,3] = 1
         
         print(self.boardmtx)
         
-    def AddPiece(self, x, y, value):
+    def AddPiece(self, x, y, value):    #change value at a position; needed for player methos play piece
             self.boardmtx[x, y] = value
-    def Get(self,  x,  y):
+    def Get(self,  x,  y):              #return value at a position; needed for player method play piece
             return self.boardmtx[x, y]
 
-    def Rotate(self):  #rotate quadrant counter-clockwise
-      a = 0 # range start for y-coordinate
-      b = 3 # range end for y-coordinate
-      c = 3 # range start for x-coordinate
-      d = 6 # range end for x-coordinate
-      
-      Quad = int(input("Which quadrant (1, 2, 3 or 4) to rotate? "))
-
-      if Quad == 1:  # top left  quadrant
-          a = 0
-          b = 3
-          c = 0
-          d = 3
-      elif Quad == 2: #top right quadrant
-          a = 0
-          b = 3
-          c = 3
-          d = 6
-      elif Quad == 3:  #bottom left quadrant
-          a = 3
-          b = 6
-          c = 0
-          d = 3
-      elif Quad == 4:  #bottom right quadrant
-          a = 3
-          b = 6
-          c = 3
-          d = 6
-      else:
-          print ("Invalid quadrant.")
-          return -1
-
-      rotation = raw_input("Which direction to rotate (C or CC)?")
-      print(rotation)
-      #print rotation
-      direction = 0
-      if rotation == "C":
-          direction = 3
-      elif rotation == "CC":
-          direction = 1
-      else:
-          print ("Invalid rotation.")
-          return -1
-                       
-      Quadrant=self.boardmtx[a:b,c:d]
-      #print Quadrant
-      Quadrant = np.rot90(Quadrant,direction)
-      #print Quadrant
-      self.boardmtx[a:b,c:d]=Quadrant
-      print(self.boardmtx)
-      return 0
+    def Rotate(self, Quad, direction):   #rotate quadrant
+        a = 0 # range start for y-coordinate
+        b = 3 # range end for y-coordinate
+        c = 3 # range start for x-coordinate
+        d = 6 # range end for x-coordinate
+        if Quad == 1:  # top left  quadrant
+              a = 0
+              b = 3
+              c = 0
+              d = 3
+        elif Quad == 2: #top right quadrant
+              a = 0
+              b = 3
+              c = 3
+              d = 6
+        elif Quad == 3:  #bottom left quadrant
+              a = 3
+              b = 6
+              c = 0
+              d = 3
+        elif Quad == 4:  #bottom right quadrant
+              a = 3
+              b = 6
+              c = 3
+              d = 6                      
+        Quadrant=self.boardmtx[a:b,c:d]
+        #print Quadrant
+        Quadrant = np.rot90(Quadrant,direction)
+        #print Quadrant
+        self.boardmtx[a:b,c:d]=Quadrant
+        print(self.boardmtx)
 
     def GameEnd(self):
         diag1 = np.diag(self.boardmtx, k=-1).copy().tolist()+[0]
@@ -109,7 +104,6 @@ class Board:
         def boardcheck(matrix):
             for row in matrix:
                 if row[1] != 0:
-                    print(row[0], row[1], row[2], row[3], row[4],row[5])
                     if (row[1] == row[2]) and (row[1] == row[3]) and (row[1] == row[4]) and (row[1] == row[5] or row[0] == row[1]):
                         print("Game over."), 
                         if row[1] == 1:
