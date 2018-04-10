@@ -1,5 +1,6 @@
 How to reward?
 
+Strategy 1: 
 Positive reinforcement for:
 -two, three, four, or five in a row
 -blocking opponent?
@@ -11,3 +12,9 @@ Negative for:
 Weighted reinforcement? (as in more positive if more in a row?)
 
 This could lead to a problem where local minima and will miss solutions of 2 + 2 on separate quads then winning with +1...
+
+
+Strategy 2: 
+-Reward (small) for each move not lost
+-Huge reward for winning
+-Huge penalty for losing
