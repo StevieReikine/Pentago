@@ -16,7 +16,7 @@ class HumanPlayer(Player):
         #place a piece
         validMove = False;
         while not validMove:
-            x, y = [int(x) for x in raw_input("Enter the coordinate to play (x, y): ").split(',')]
+            x, y = [int(x) for x in input("Enter the coordinate to play (x, y): ").split(',')]
             # x-coordinate to human user (index at 1)
             # y-coordinate to human user (index at 1)
             if a_board.Get(y-1,x-1) == 0: 
@@ -33,7 +33,7 @@ class HumanPlayer(Player):
         
         direction = 0
         while direction != 3 and direction != 1:
-            rotation = raw_input("Which direction to rotate (C or CC)?")
+            rotation = input("Which direction to rotate (C or CC)?")
             if rotation == "C":
                   direction = 3
             elif rotation == "CC":
