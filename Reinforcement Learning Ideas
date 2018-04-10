@@ -15,6 +15,9 @@ This could lead to a problem where local minima and will miss solutions of 2 + 2
 
 
 Strategy 2: 
--Reward (small) for each move not lost
+-Small penalty for each move not lost
 -Huge reward for winning
+-Medium reward for drawing
 -Huge penalty for losing
+
+Note: rewarding for not losing would enourage moves that prolong the game, whereas the point is to win as quickly as possible
