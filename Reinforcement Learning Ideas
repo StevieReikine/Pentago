@@ -1,0 +1,13 @@
+How to reward?
+
+Positive reinforcement for:
+-two, three, four, or five in a row
+-blocking opponent?
+      leave out in first pass
+
+Negative for:
+-opponent having 2, 3, 4 or 5 in a row
+
+Weighted reinforcement? (as in more positive if more in a row?)
+
+This could lead to a problem where local minima and will miss solutions of 2 + 2 on separate quads then winning with +1...
