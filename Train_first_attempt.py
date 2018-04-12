@@ -6,14 +6,12 @@ import os
 
 
 board = Board()
-print("Yes.")
 player2 = DummyAI("Rando", 2)
 
 def game_step(action):
     #turn action vector into move
     #get x, y, Quad, and direction from action vector
         #turn action into 6x6x4x2 and get indices of maximum value
-    print(action)
     place_holder = np.zeros((288,1))
     place_holder[action]=100
     a = np.reshape(place_holder, (6,6,4,2))
@@ -54,7 +52,7 @@ def game_step(action):
         reward = -500
     else:
         done = False
-    print(board.boardmtx)
+    #print(board.boardmtx)
     return obs, reward, done
 
 def preprocess_observation(obs):    
@@ -158,13 +156,12 @@ def epsilon_greedy(q_values, step):
         return np.argmax(q_values) # optimal action
 
 #training loop initial variables
-n_steps = 4000000  # total number of training steps
-training_start = 10000  # start training after 10,000 game iterations
+n_steps = 10000  # total number of training steps
+training_start = 100  # start training after 100 game iterations
 training_interval = 4  # run a training step every 4 game iterations
-save_steps = 1000  # save the model every 1,000 training steps
-copy_steps = 10000  # copy online DQN to target DQN every 10,000 training steps
+save_steps = 100  # save the model every 100 training steps
+copy_steps = 25  # copy online DQN to target DQN every 25 training steps
 discount_rate = 0.99
-skip_start = 90  # Skip the start of every game (it's just waiting time).
 batch_size = 50
 iteration = 0  # game iterations
 checkpoint_path = "./my_dqn.ckpt"
