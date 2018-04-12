@@ -17,7 +17,7 @@ class HumanPlayer(Player):
         #place a piece
         validMove = False
         while not validMove:
-            x, y = [int(x) for x in raw_input("Enter the coordinate to play (x, y): ").split(',')]
+            x, y = [int(x) for x in input("Enter the coordinate to play (x, y): ").split(',')]
             # x-coordinate to human user (index at 1)
             # y-coordinate to human user (index at 1)
             if a_board.Get(y-1,x-1) == 0: 
@@ -34,7 +34,7 @@ class HumanPlayer(Player):
         
         direction = 0
         while direction != 3 and direction != 1:
-            rotation = raw_input("Which direction to rotate (C or CC)?")
+            rotation = input("Which direction to rotate (C or CC)?")
             if rotation == "C":
                   direction = 3
             elif rotation == "CC":
@@ -54,7 +54,7 @@ class DummyAI(Player):
             if a_board.Get(y-1,x-1) == 0: 
                 a_board.AddPiece(y-1, x-1,  self.id)
                 validMove = True
-            else:
+            #else:
                 #print("Invalid play. Please choose again!")
 
         #rotate a quadrant
@@ -148,20 +148,4 @@ class Board:
         else:
             return 0
         
-
-
-board = Board()
-player1 = HumanPlayer("Pefik",  1)
-player2 = DummyAI("Rando", 2)
-
-while True:
-    player1.play(board)
-    gameOver = board.GameEnd()
-    if gameOver == 1:
-        break
-
-    player2.play(board)
-    gameOver = board.GameEnd()
-    if gameOver == 1:
-        break
     
