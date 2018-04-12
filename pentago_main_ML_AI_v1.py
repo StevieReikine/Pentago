@@ -78,7 +78,7 @@ class Board:
         #print(self.boardmtx)
 
     def reset(self):
-        self.boardmtx = np.zeros((6,6),dtpye=np.int)
+        self.boardmtx = np.zeros((6,6),dtype=np.int)
     
     def AddPiece(self, x, y, value):    #change value at a position; needed for player methos play piece
             self.boardmtx[x, y] = value
