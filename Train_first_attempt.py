@@ -4,15 +4,19 @@ import numpy as np
 import tensorflow as tf
 import os
 
+
 board = Board()
 print("Yes.")
 player2 = DummyAI("Rando", 2)
 
-def step(action):
+def game_step(action):
     #turn action vector into move
     #get x, y, Quad, and direction from action vector
         #turn action into 6x6x4x2 and get indices of maximum value
-    a = action.np.reshape((6,6,4,2))
+    print(action)
+    place_holder = np.zeros((288,1))
+    place_holder[action]=100
+    a = np.reshape(place_holder, (6,6,4,2))
     ind = np.unravel_index(np.argmax(a, axis = None), a.shape)
     x = ind[0]
     y = ind[1]
@@ -54,20 +58,19 @@ def step(action):
     return obs, reward, done
 
 def preprocess_observation(obs):    
-    return obs.boardmtx
+    return np.reshape(obs.boardmtx,(6,6,1))
 
 #create DQN network to build two DQN (actor and critic)
 #code based on A. Geron GitHub and O'Reilly book
-#need to resize NN to fit my board space?
-input_height = 9
-input_width = 9
+input_height = 6
+input_width = 6
 input_channels = 1
-conv_n_maps = [32, 64, 64]
-conv_kernel_sizes = [(8,8), (4,4), (3,3)]
-conv_strides = [4, 2, 1]
-conv_paddings = ["SAME"] * 3 
-conv_activation = [tf.nn.relu] * 3
-n_hidden_in = 64 * 11 * 10  # conv3 has 64 maps of 11x10 each
+conv_n_maps = [128]
+conv_kernel_sizes = [(3,3)]
+conv_strides = [1]
+conv_paddings = ["VALID"] 
+conv_activation = [tf.nn.relu]
+n_hidden_in = 128 * 4 * 4  # conv1 has 128 maps of 4x4 each
 n_hidden = 512
 hidden_activation = tf.nn.relu
 n_outputs = 288  # 36 x4 x2 = 288 actions are available
@@ -200,7 +203,7 @@ with tf.Session() as sess:
         action = epsilon_greedy(q_values, step)
 
         # Online DQN plays
-        obs, reward, done = step(action)
+        obs, reward, done = game_step(action)
         next_state = preprocess_observation(obs)
 
         # Let's memorize what happened
