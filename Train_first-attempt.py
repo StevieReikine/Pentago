@@ -1,4 +1,4 @@
-from pentago_main_AI_dummy import Board, DummyAI
+from pentago_main_ML_AI_v1 import Board, DummyAI
 from random import randint
 import numpy as np
 import tensorflow as ft
