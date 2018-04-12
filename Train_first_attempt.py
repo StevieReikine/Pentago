@@ -1,7 +1,8 @@
 from pentago_main_ML_AI_v1 import Board, DummyAI
 from random import randint
 import numpy as np
-import tensorflow as ft
+import tensorflow as tf
+import os
 
 board = Board()
 print("Yes.")
