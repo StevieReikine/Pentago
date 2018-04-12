@@ -155,86 +155,112 @@ def epsilon_greedy(q_values, step):
     else:
         return np.argmax(q_values) # optimal action
 
-#training loop initial variables
-n_steps = 10000  # total number of training steps
-training_start = 100  # start training after 100 game iterations
-training_interval = 4  # run a training step every 4 game iterations
-save_steps = 100  # save the model every 100 training steps
-copy_steps = 25  # copy online DQN to target DQN every 25 training steps
-discount_rate = 0.99
-batch_size = 50
-iteration = 0  # game iterations
-checkpoint_path = "./my_dqn.ckpt"
-done = True # env needs to be reset
 
-#tracking progress
-loss_val = np.infty
-game_length = 0
-total_max_q = 0
-mean_max_q = 0.0
+
+
+#Inference loop
+def Infer():
+    done = False
+    checkpoint_path = "./my_dqn.ckpt"
+    n_max_steps = 10
+    with tf.Session() as sess:
+        saver.restore(sess, checkpoint_path)
+        board.reset()
+        obs = board
+        for step in range(n_max_steps):
+            state = preprocess_observation(obs)
+            # Online DQN evaluates what to do
+            q_values = online_q_values.eval(feed_dict={X_state: [state]})
+            action = np.argmax(q_values)
+            # Online DQN plays
+            obs, reward, done = game_step(action)
+            print(board.boardmtx)
+            if done:
+                break
 
 #training loop
-
-with tf.Session() as sess:
-    if os.path.isfile(checkpoint_path + ".index"):
-        saver.restore(sess, checkpoint_path)
-    else:
+def TrainNN():
+    #training loop initial variables
+    n_steps = 10000  # total number of training steps
+    training_start = 100  # start training after 100 game iterations
+    training_interval = 4  # run a training step every 4 game iterations
+    save_steps = 100  # save the model every 100 training steps
+    copy_steps = 25  # copy online DQN to target DQN every 25 training steps
+    discount_rate = 0.99
+    batch_size = 50
+    iteration = 0  # game iterations
+    checkpoint_path = "./my_dqn.ckpt"
+    done = True # env needs to be reset
+        
+    #tracking progress
+    loss_val = np.infty
+    game_length = 0
+    total_max_q = 0
+    mean_max_q = 0.0
+    
+    with tf.Session() as sess:
         init.run()
         copy_online_to_target.run()
-    while True:
-        step = global_step.eval()
-        if step >= n_steps:
-            break
-        iteration += 1
-        #print("\rIteration {}\tTraining step {}/{} ({:.1f})%\tLoss {:5f}\tMean Max-Q {:5f}   ".format(
-        #    iteration, step, n_steps, step * 100 / n_steps, loss_val, mean_max_q), end="")
-        if done: # game over, start again
-            board.reset()
-            obs = board
-            reward = 0
-            done = False
-            state = preprocess_observation(obs)
+        while True:
+            step = global_step.eval()
+            if step >= n_steps:
+                break
+            iteration += 1
+            #print("\rIteration {}\tTraining step {}/{} ({:.1f})%\tLoss {:5f}\tMean Max-Q {:5f}   ".format(
+            #    iteration, step, n_steps, step * 100 / n_steps, loss_val, mean_max_q), end="")
+            if done: # game over, start again
+                board.reset()
+                obs = board
+                reward = 0
+                done = False
+                state = preprocess_observation(obs)
 
-        # Online DQN evaluates what to do
-        q_values = online_q_values.eval(feed_dict={X_state: [state]})
-        action = epsilon_greedy(q_values, step)
+            # Online DQN evaluates what to do
+            q_values = online_q_values.eval(feed_dict={X_state: [state]})
+            action = epsilon_greedy(q_values, step)
 
-        # Online DQN plays
-        obs, reward, done = game_step(action)
-        next_state = preprocess_observation(obs)
+            # Online DQN plays
+            obs, reward, done = game_step(action)
+            next_state = preprocess_observation(obs)
 
-        # Let's memorize what happened
-        replay_memory.append((state, action, reward, next_state, 1.0 - done))
-        state = next_state
+            # Let's memorize what happened
+            replay_memory.append((state, action, reward, next_state, 1.0 - done))
+            state = next_state
 
-        # Compute statistics for tracking progress (not shown in the book)
-        total_max_q += q_values.max()
-        game_length += 1
-        if done:
-            mean_max_q = total_max_q / game_length
-            total_max_q = 0.0
-            game_length = 0
+            # Compute statistics for tracking progress (not shown in the book)
+            total_max_q += q_values.max()
+            game_length += 1
+            if done:
+                mean_max_q = total_max_q / game_length
+                total_max_q = 0.0
+                game_length = 0
 
-        if iteration < training_start or iteration % training_interval != 0:
-            continue # only train after warmup period and at regular intervals
-        
-        # Sample memories and use the target DQN to produce the target Q-Value
-        X_state_val, X_action_val, rewards, X_next_state_val, continues = (
-            sample_memories(batch_size))
-        next_q_values = target_q_values.eval(
-            feed_dict={X_state: X_next_state_val})
-        max_next_q_values = np.max(next_q_values, axis=1, keepdims=True)
-        y_val = rewards + continues * discount_rate * max_next_q_values
+            if iteration < training_start or iteration % training_interval != 0:
+                continue # only train after warmup period and at regular intervals
+            
+            # Sample memories and use the target DQN to produce the target Q-Value
+            X_state_val, X_action_val, rewards, X_next_state_val, continues = (
+                sample_memories(batch_size))
+            next_q_values = target_q_values.eval(
+                feed_dict={X_state: X_next_state_val})
+            max_next_q_values = np.max(next_q_values, axis=1, keepdims=True)
+            y_val = rewards + continues * discount_rate * max_next_q_values
 
-        # Train the online DQN
-        _, loss_val = sess.run([training_op, loss], feed_dict={
-            X_state: X_state_val, X_action: X_action_val, y: y_val})
+            # Train the online DQN
+            _, loss_val = sess.run([training_op, loss], feed_dict={
+                X_state: X_state_val, X_action: X_action_val, y: y_val})
 
-        # Regularly copy the online DQN to the target DQN
-        if step % copy_steps == 0:
-            copy_online_to_target.run()
+            # Regularly copy the online DQN to the target DQN
+            if step % copy_steps == 0:
+                copy_online_to_target.run()
 
-        # And save regularly
-        if step % save_steps == 0:
-            saver.save(sess, checkpoint_path)
+            # And save regularly
+            if step % save_steps == 0:
+                saver.save(sess, checkpoint_path)
 
+inference_mode = True
+
+if inference_mode == False:
+    TrainNN()
+else:
+    Infer()
