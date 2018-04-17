@@ -1,4 +1,5 @@
 from pentago_main_ML_AI_v1 import Board, DummyAI
+import copy
 from random import randint
 import numpy as np
 import tensorflow as tf
@@ -6,7 +7,7 @@ import os
 
 
 board = Board()
-player2 = DummyAI("Rando", 2)
+player2 = DummyAI("Rando", -1)
 
 def game_step(action):
     #turn action vector into move
@@ -23,9 +24,9 @@ def game_step(action):
     #check if x, y valid, reward if yes and if not give huge penalty
     if board.Get(x,y) == 0:   #if valid move
         board.AddPiece(x, y, 1)     #make the move
-        reward = 10
+        reward = 0.3
     else:       #end game because NN_AI was dumb
-        reward = -100
+        reward = -1.0
         obs = board
         done = True
         return obs, reward, done
@@ -36,11 +37,18 @@ def game_step(action):
     if gameOver == 1:
         done = True
         #this would only be true if NN_AI won
-        reward = 500
+        reward = 1.0
         return obs, reward, done
     else:
-        done = False
-        reward = -1  #should only happen after five moves though
+        #check if draw
+        if 0 not in board.boardmtx:     #if draw
+            obs = board
+            done = True
+            reward = 0.1
+            return obs, reward, done
+        else:
+            done = False
+            #reward = -0.1  #should only happen after five moves though
     #DummyAI moves
     player2.play(board)
     obs = board  #new board position after second player has moved
@@ -49,9 +57,15 @@ def game_step(action):
     if gameOver == 1:
         done = True
         #this would only be true if Dummy_AI won
-        reward = -500
+        reward = -0.7
     else:
-        done = False
+        #check if draw
+        if 0 not in board.boardmtx:     #if draw
+            obs = board
+            done = True
+            reward = 0.1
+        else: 
+            done = False
     #print(board.boardmtx)
     return obs, reward, done
 
@@ -63,12 +77,13 @@ def preprocess_observation(obs):
 input_height = 6
 input_width = 6
 input_channels = 1
-conv_n_maps = [128]
-conv_kernel_sizes = [(3,3)]
-conv_strides = [1]
-conv_paddings = ["VALID"] 
-conv_activation = [tf.nn.relu]
-n_hidden_in = 128 * 4 * 4  # conv1 has 128 maps of 4x4 each
+conv_n_maps = [64, 64]
+conv_kernel_sizes = [(2,2), (3,3)]
+conv_strides = [1, 1]
+conv_paddings = ["VALID"]*2 
+conv_names = ["conv1","conv2"]
+conv_activation = [tf.nn.relu]*2
+n_hidden_in = 64 * 3 * 3  # conv1 has maps of 4x4 each leading to conv2 having maps of 3 x 3
 n_hidden = 512
 hidden_activation = tf.nn.relu
 n_outputs = 288  # 36 x4 x2 = 288 actions are available
@@ -88,7 +103,11 @@ def q_network(X_state, name):
         hidden = tf.layers.dense(last_conv_layer_flat, n_hidden,
                                  activation=hidden_activation,
                                  kernel_initializer=initializer)
-        outputs = tf.layers.dense(hidden, n_outputs,
+        hidden2 = tf.layers.dense(hidden, n_hidden,
+                                 activation=hidden_activation,
+                                 kernel_initializer=initializer)
+
+        outputs = tf.layers.dense(hidden2, n_outputs,
                                   kernel_initializer=initializer)
     trainable_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES,
                                        scope=scope.name)
@@ -146,7 +165,7 @@ def sample_memories(batch_size):
 #epsilon-greedy policy for exploring game
 eps_min = 0.1
 eps_max = 1.0
-eps_decay_steps = 2000000
+eps_decay_steps = 2500
 
 def epsilon_greedy(q_values, step):
     epsilon = max(eps_min, eps_max - (eps_max-eps_min) * step/eps_decay_steps)
@@ -182,7 +201,7 @@ def Infer():
 def TrainNN():
     #training loop initial variables
     n_steps = 10000  # total number of training steps
-    training_start = 100  # start training after 100 game iterations
+    training_start = 2000  # start training after 100 game iterations
     training_interval = 4  # run a training step every 4 game iterations
     save_steps = 100  # save the model every 100 training steps
     copy_steps = 25  # copy online DQN to target DQN every 25 training steps
@@ -218,13 +237,14 @@ def TrainNN():
             # Online DQN evaluates what to do
             q_values = online_q_values.eval(feed_dict={X_state: [state]})
             action = epsilon_greedy(q_values, step)
+            old_state = state.copy()
 
             # Online DQN plays
             obs, reward, done = game_step(action)
             next_state = preprocess_observation(obs)
 
             # Let's memorize what happened
-            replay_memory.append((state, action, reward, next_state, 1.0 - done))
+            replay_memory.append((old_state, action, reward, next_state, 1.0 - done))
             state = next_state
 
             # Compute statistics for tracking progress (not shown in the book)
@@ -258,7 +278,7 @@ def TrainNN():
             if step % save_steps == 0:
                 saver.save(sess, checkpoint_path)
 
-inference_mode = True
+inference_mode = Falsejkhjhg
 
 if inference_mode == False:
     TrainNN()
